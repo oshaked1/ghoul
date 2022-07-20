@@ -12,7 +12,7 @@ SERVICE_UNLOAD = 1
 
 
 def ioctl(fd: int, cmd: int, arg: int):
-    syscall(16, fd, cmd, arg)
+    syscall(SYSCALL_IOCTL_X86_64, fd, cmd, arg)
 
 
 def show():
