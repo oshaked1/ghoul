@@ -5,7 +5,7 @@ import ctypes
 
 syscall = ctypes.CDLL(None).syscall
 SYSCALL_IOCTL_X86_64 = 16
-SERVICE_FD = 123
+SERVICE_FD = 666
 
 SERVICE_SHOW = 0
 SERVICE_UNLOAD = 1
