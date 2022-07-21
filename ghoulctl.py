@@ -15,7 +15,6 @@ SERVICE_PING = 3
 SERVICE_CHANGE_PING_ARG = 4
 
 PING_ARG = int(os.environ.get('GHOUL_PING_ARG', 0)) or 666
-PING_OK = 666
 
 
 def ioctl(fd: int, cmd: int, arg: int):
@@ -39,7 +38,7 @@ def change_fd():
 
 def ping():
     err = ioctl(SERVICE_FD, SERVICE_PING, PING_ARG)
-    if err == PING_OK:
+    if err == PING_ARG:
         print('Ghoul is loaded')
     else:
         print('Ghoul is not loaded')

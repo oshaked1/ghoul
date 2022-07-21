@@ -29,7 +29,7 @@ int handle_ioctl_request(unsigned int fd, unsigned int cmd, unsigned long arg)
         case SERVICE_PING:
             // make sure argument is correct
             if (arg == ping_arg)
-                return 666;
+                return ping_arg;
             break;
         case SERVICE_CHANGE_PING_ARG:
             ping_arg = arg;
