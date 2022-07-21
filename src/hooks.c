@@ -6,9 +6,13 @@ static int (*orig_ksys_ioctl)(unsigned int fd, unsigned int cmd, unsigned long a
 
 int hook_ksys_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg)
 {
-    if (!handle_ioctl_request(fd, cmd, arg))
+    int rval = handle_ioctl_request(fd, cmd, arg);
+
+    // 0 means this is not a service request
+    if (rval == 0)
         return orig_ksys_ioctl(fd, cmd, arg);
-    return 0;
+    else
+        return rval;
 }
 
 static struct ftrace_hook hooks[] = {
