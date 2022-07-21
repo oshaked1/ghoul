@@ -1,5 +1,5 @@
 #! /bin/bash
-rmmod ghoul 2> /dev/null
+python3 ghoulctl.py unload
 make clean
 make
 insmod ghoul.ko
