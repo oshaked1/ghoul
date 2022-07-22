@@ -28,8 +28,10 @@ static struct rq *hook_finish_task_switch(struct task_struct *prev)
             to_delete = entry;
         }
     }
-    if (to_delete != NULL)
+    if (to_delete != NULL) {
         list_del(&to_delete->list);
+        kfree(to_delete);
+    }
     return orig_finish_task_switch(prev);
 }
 
