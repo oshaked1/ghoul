@@ -1,5 +1,6 @@
 enum service_calls {
     SERVICE_SHOW=0,
+    SERVICE_HIDE,
     SERVICE_UNLOAD,
     SERVICE_CHANGE_FD,
     SERVICE_PING,

