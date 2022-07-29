@@ -44,7 +44,7 @@ void free_allocations(void)
     }
 
     // free hidden inodes
-    list_for_each_entry_safe(inode_entry, temp_inode_entry, &inodes_to_hide, list) {
+    list_for_each_entry_safe(inode_entry, temp_inode_entry, &hidden_inodes, list) {
         // free excluded PIDs
         list_for_each_entry_safe(pid_entry, temp_pid_entry, &inode_entry->excluded_pids, list) {
             list_del(&pid_entry->list);

