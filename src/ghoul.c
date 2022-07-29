@@ -31,6 +31,7 @@ static void __exit ghoul_exit(void)
 {
     if (hooks_installed)
         unregister_hooks();
+    free_allocations();
     pr_info("ghoul: removed\n");
 }
 
