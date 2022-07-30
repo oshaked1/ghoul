@@ -27,12 +27,10 @@ SERVICE_GIVE_ROOT = 6
 SERVICE_HIDE_FILE_INODE = 7
 SERVICE_SHOW_FILE_INODE = 8
 
-# SERVICE_GIVE_ROOT constants
+# PID constants
+ALL_PIDS = 0
 THIS_PID = 0
 PARENT_PID = -1
-
-# SERVICE_SHOW_INODE constants
-ALL_PIDS = 0
 
 
 def service_request(cmd: int, arg: int):

@@ -1,4 +1,5 @@
 #define ALL_PIDS 0
+#define PARENT_PID -1
 
 struct inode_list {
     unsigned long ino;

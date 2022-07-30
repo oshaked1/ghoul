@@ -15,7 +15,6 @@ endif
 
 run: all
 		python3 ghoulctl.py unload
-		sleep 0.5
 		sudo insmod $(module_name).ko
 
 clean:
