@@ -21,14 +21,20 @@ clean:
 		python3 ghoulctl.py unload
 		make -C /lib/modules/$(KVERSION)/build M=$(PWD) clean
 ifneq ($(module_name), ghoul)
-		rm src/$(module_name).c
+		rm -f src/$(module_name).c
 endif
-		rm -r __pycache__
-		rm -r .pytest_cache
-		rm -r tests/__pycache__
+		rm -rf __pycache__
+		rm -rf .pytest_cache
+		rm -rf tests/__pycache__
 
 test: all
 		python3 ghoulctl.py unload
 		sudo insmod $(module_name).ko
 		-python3 -m pytest
+		python3 ghoulctl.py unload
+
+rkhunter: all
+		python3 ghoulctl.py unload
+		sudo insmod $(module_name).ko
+		-sudo rkhunter --check --sk
 		python3 ghoulctl.py unload
