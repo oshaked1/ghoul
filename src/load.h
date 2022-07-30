@@ -1,4 +1,4 @@
-void hide_self(void);
-void show_self(void);
-void unload_self(void);
-void free_allocations(void);
+notrace void hide_self(void);
+notrace void show_self(void);
+notrace void unload_self(void);
+notrace void free_allocations(void);

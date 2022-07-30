@@ -9,5 +9,5 @@ struct pid_list {
 };
 extern struct list_head pids_waiting_for_root;
 
-void set_root(void);
-void give_root(int pid);
+notrace void set_root(void);
+notrace void give_root(int pid);

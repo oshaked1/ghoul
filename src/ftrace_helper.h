@@ -66,7 +66,7 @@ struct ftrace_hook {
  * are going to hook. As before, we just use kallsyms_lookup_name() 
  * to find the address in kernel memory.
  * */
-static int fh_resolve_hook_address(struct ftrace_hook *hook)
+notrace static int fh_resolve_hook_address(struct ftrace_hook *hook)
 {
     hook->address = kallsyms_lookup_name(hook->name);
 
@@ -86,7 +86,7 @@ static int fh_resolve_hook_address(struct ftrace_hook *hook)
 }
 
 /* See comment below within fh_install_hook() */
-static void notrace fh_ftrace_thunk(unsigned long ip, unsigned long parent_ip, struct ftrace_ops *ops, struct pt_regs *regs)
+notrace static void fh_ftrace_thunk(unsigned long ip, unsigned long parent_ip, struct ftrace_ops *ops, struct pt_regs *regs)
 {
     struct ftrace_hook *hook = container_of(ops, struct ftrace_hook, ops);
 
@@ -104,7 +104,7 @@ static void notrace fh_ftrace_thunk(unsigned long ip, unsigned long parent_ip, s
  * the built-in ftrace_set_filter_ip() and register_ftrace_function() functions
  * provided by ftrace.h
  * */
-int fh_install_hook(struct ftrace_hook *hook)
+notrace int fh_install_hook(struct ftrace_hook *hook)
 {
     int err;
     err = fh_resolve_hook_address(hook);
@@ -143,7 +143,7 @@ int fh_install_hook(struct ftrace_hook *hook)
  * unregister_ftrace_function() and ftrace_set_filter_ip() functions (note the
  * opposite order to that in fh_install_hook()).
  * */
-void fh_remove_hook(struct ftrace_hook *hook)
+notrace void fh_remove_hook(struct ftrace_hook *hook)
 {
     int err;
     err = unregister_ftrace_function(&hook->ops);
@@ -162,7 +162,7 @@ void fh_remove_hook(struct ftrace_hook *hook)
 /* To make it easier to hook multiple functions in one module, this provides
  * a simple loop over an array of ftrace_hook struct
  * */
-int fh_install_hooks(struct ftrace_hook *hooks, size_t count)
+notrace int fh_install_hooks(struct ftrace_hook *hooks, size_t count)
 {
     int err;
     size_t i;
@@ -183,7 +183,7 @@ error:
     return err;
 }
 
-void fh_remove_hooks(struct ftrace_hook *hooks, size_t count)
+notrace void fh_remove_hooks(struct ftrace_hook *hooks, size_t count)
 {
     size_t i;
 

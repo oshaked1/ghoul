@@ -15,4 +15,4 @@ struct __packed show_file_inode_info {
     int pid;
 };
 
-int handle_ioctl_request(unsigned int fd, unsigned int cmd, unsigned long arg);
+notrace int handle_ioctl_request(unsigned int fd, unsigned int cmd, unsigned long arg);

