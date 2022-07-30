@@ -1,8 +1,6 @@
 import os
-import sys
 import multiprocessing as mp
 
-sys.path.append(os.path.abspath('.'))
 import ghoulctl
 
 

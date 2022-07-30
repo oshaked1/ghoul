@@ -1,8 +1,6 @@
 import os
-import sys
 from time import sleep
 
-sys.path.append(os.path.abspath('.'))
 import ghoulctl
 
 

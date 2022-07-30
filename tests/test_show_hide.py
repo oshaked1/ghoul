@@ -1,10 +1,7 @@
 import os
-import sys
 
-from utils import output
-
-sys.path.append(os.path.abspath('.'))
 import ghoulctl
+from utils import output
 
 
 MODULE_NAME = os.environ.get('GHOUL_MODULE_NAME', 'ghoul')

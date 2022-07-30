@@ -24,6 +24,9 @@ clean:
 ifneq ($(module_name), ghoul)
 		rm src/$(module_name).c
 endif
+		rm -r __pycache__
+		rm -r .pytest_cache
+		rm -r tests/__pycache__
 
 test: all
 		python3 ghoulctl.py unload
