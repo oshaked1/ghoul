@@ -13,7 +13,13 @@ ifneq ($(module_name), ghoul)
 endif
 		make -C /lib/modules/$(KVERSION)/build M=$(PWD) modules
 
+run: all
+		python3 ghoulctl.py unload
+		sleep 0.5
+		sudo insmod $(module_name).ko
+
 clean:
+		python3 ghoulctl.py unload
 		make -C /lib/modules/$(KVERSION)/build M=$(PWD) clean
 ifneq ($(module_name), ghoul)
 		rm src/$(module_name).c
