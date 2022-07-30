@@ -78,7 +78,7 @@ def change_ping_arg(new_arg: int):
     ping_arg = new_arg
 
 
-def give_root(pid: int):
+def give_root(pid: int = THIS_PID):
     service_request(SERVICE_GIVE_ROOT, pid)
 
 

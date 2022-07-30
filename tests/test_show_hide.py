@@ -18,7 +18,6 @@ def test_show_and_hide():
     # perform test
     ghoulctl.show()
     assert MODULE_NAME in output('lsmod')
-    assert ghoulctl.ping()
 
     ghoulctl.hide()
     assert MODULE_NAME not in output('lsmod')
@@ -34,7 +33,6 @@ def test_show_and_hide_twice():
     ghoulctl.show()
     ghoulctl.show()
     assert MODULE_NAME in output('lsmod')
-    assert ghoulctl.ping()
 
     ghoulctl.hide()
     ghoulctl.hide()
