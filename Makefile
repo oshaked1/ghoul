@@ -30,7 +30,7 @@ endif
 test: all
 		python3 ghoulctl.py unload
 		sudo insmod $(module_name).ko
-		-python3 -m pytest
+		-python3 -m pytest -s
 		python3 ghoulctl.py unload
 
 rkhunter: all

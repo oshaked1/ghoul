@@ -177,7 +177,7 @@ def can_mount(source: str, target: str) -> bool:
     res = 'mount point does not exist' not in proc.communicate()[1].decode()
 
     # unmount in case it worked
-    os.system(f'sudo umount {target}')
+    subprocess.Popen(['sudo', 'umount', target], stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
     return res
 
