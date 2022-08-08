@@ -10,7 +10,7 @@ MODULE_NAME = os.environ.get('GHOUL_MODULE_NAME', 'ghoul')
 FILE = '/tmp/hidden_file'
 LINK = '/tmp/hidden_file_link'
 DIR = '/tmp/hidden_dir'
-TEST_DIR = '/tmp/test_dir'
+TEMP_DIR = '/tmp/temp_dir'
 
 
 def can_setxattr(path: str) -> bool:
@@ -232,6 +232,13 @@ def can_chroot(path: str):
     return q.get()
 
 
+def is_listed(path: str):
+    dir = os.path.dirname(path)
+    filename = os.path.basename(path)
+
+    return filename in os.listdir(dir)
+
+
 def test_hide_file_direct_access():
     # reload ghoul to make sure no inodes are hidden
     ghoulctl.unload()
@@ -239,12 +246,10 @@ def test_hide_file_direct_access():
     os.system(f'sudo insmod {MODULE_NAME}.ko')
     assert ghoulctl.ping()
 
-    # create executable file which will be hidden
+    # create executable file which will be hidden and make sure it's accessible
     with open(FILE, 'w') as f:
         f.write("#! /bin/python3\nexit(0)")
     os.chmod(FILE, 0o777)
-
-    # make sure file is accessible
     assert can_access(FILE)
 
     # hide file
@@ -282,10 +287,8 @@ def test_hide_dir_direct_access():
     os.system(f'sudo insmod {MODULE_NAME}.ko')
     assert ghoulctl.ping()
 
-    # create directory which will be hidden
+    # create directory which will be hidden and make sure it's accessible
     os.makedirs(DIR, exist_ok=True)
-
-    # make sure directory is accessible
     assert can_access(DIR)
 
     # hide dir
@@ -294,14 +297,13 @@ def test_hide_dir_direct_access():
 
     # make sure dir is not accessible anymore
     assert not can_access(DIR)
-    assert not can_open(DIR)
 
     assert not can_umount(DIR)
 
-    os.makedirs(TEST_DIR, exist_ok=True)
-    assert not can_mount(TEST_DIR, DIR)
+    os.makedirs(TEMP_DIR, exist_ok=True)
+    assert not can_mount(TEMP_DIR, DIR)
     try:
-        os.rmdir(TEST_DIR)
+        os.rmdir(TEMP_DIR)
     except FileNotFoundError:
         pass
 
@@ -318,5 +320,69 @@ def test_hide_dir_direct_access():
     
     # show directory and delete it
     ghoulctl.show_inode(inode)
+    os.rmdir(DIR)
+    assert ghoulctl.ping()
+
+
+def test_hide_file_listing():
+    # reload ghoul to make sure no inodes are hidden
+    ghoulctl.unload()
+    sleep(0.1)
+    os.system(f'sudo insmod {MODULE_NAME}.ko')
+    assert ghoulctl.ping()
+
+    # create file which will be hidden and make sure it's accessible and listed
+    open(FILE, 'w').close()
+    assert can_access(FILE)
+    assert is_listed(FILE)
+
+    # hide file
+    inode = os.stat(FILE).st_ino
+    ghoulctl.hide_inode(inode)
+
+    # make sure file is not accessible anymore
+    assert not can_access(FILE)
+
+    # make sure file is not listed anymore
+    assert not is_listed(FILE)
+
+    # show file and delete it
+    ghoulctl.show_inode(inode)
+    os.remove(FILE)
+    assert ghoulctl.ping()
+
+
+def test_hide_dir_indirect_access():
+    # reload ghoul to make sure no inodes are hidden
+    ghoulctl.unload()
+    sleep(0.1)
+    os.system(f'sudo insmod {MODULE_NAME}.ko')
+    assert ghoulctl.ping()
+
+    # create directory which will be hidden and make sure it's accessible
+    os.makedirs(DIR, exist_ok=True)
+    assert can_access(DIR)
+
+    # create file under the directory and make sure it's accessible
+    subfile = os.path.join(DIR, 'subfile')
+    open(subfile, 'w').close()
+    assert can_access(subfile)
+    assert is_listed(subfile)
+
+    # hide dir
+    inode = os.stat(DIR).st_ino
+    ghoulctl.hide_inode(inode)
+
+    # make sure dir is not accessible anymore
+    assert not can_access(DIR)
+    
+    # make sure subfile is not accessible anymore
+    assert not can_access(subfile)
+    assert not can_symlink(subfile, LINK)
+    assert not can_link(subfile, LINK)
+
+    # show dir and delete it
+    ghoulctl.show_inode(inode)
+    os.remove(subfile)
     os.rmdir(DIR)
     assert ghoulctl.ping()

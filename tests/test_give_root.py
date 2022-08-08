@@ -52,14 +52,14 @@ def test_give_parent_root():
 
 
 def give_other_root_giver(q: mp.Queue):
-    pid = q.get(timeout=0.5)
+    pid = q.get(timeout=2)
     ghoulctl.give_root(pid)
     q.put(True)
 
 
 def give_other_root_receiver(q1: mp.Queue, q2: mp.Queue):
     q1.put(os.getpid())
-    q1.get(timeout=0.5)
+    q1.get(timeout=2)
 
     q2.put(os.getuid() == 0 and os.geteuid() == 0)
 

