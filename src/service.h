@@ -10,6 +10,11 @@ enum service_calls {
     SERVICE_SHOW_FILE_INODE
 };
 
+struct __packed change_ping_arg_info {
+    unsigned long old_arg;
+    unsigned long new_arg;
+};
+
 struct __packed show_file_inode_info {
     unsigned long ino;
     int pid;

