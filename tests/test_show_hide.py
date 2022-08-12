@@ -7,31 +7,27 @@ from utils import output
 MODULE_NAME = os.environ.get('GHOUL_MODULE_NAME', 'ghoul')
 
 
+def is_hidden_procfs():
+    return MODULE_NAME not in output('lsmod')
+
+
+def is_hidden_sysfs():
+    return MODULE_NAME not in os.listdir('/sys/module')
+
+
+def is_hidden():
+    return is_hidden_procfs() and is_hidden_sysfs()
+
+
 def test_show_and_hide():
     # make sure conditions are right
     assert ghoulctl.ping()
-    assert MODULE_NAME not in output('lsmod')
+    assert is_hidden()
     
     # perform test
     ghoulctl.show()
-    assert MODULE_NAME in output('lsmod')
+    assert not is_hidden()
 
     ghoulctl.hide()
-    assert MODULE_NAME not in output('lsmod')
-    assert ghoulctl.ping()
-
-
-def test_show_and_hide_twice():
-    # make sure conditions are right
-    assert ghoulctl.ping()
-    assert MODULE_NAME not in output('lsmod')
-
-    # perform test
-    ghoulctl.show()
-    ghoulctl.show()
-    assert MODULE_NAME in output('lsmod')
-
-    ghoulctl.hide()
-    ghoulctl.hide()
-    assert MODULE_NAME not in output('lsmod')
+    assert is_hidden()
     assert ghoulctl.ping()

