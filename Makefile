@@ -8,12 +8,15 @@ module_name = $(GHOUL_MODULE_NAME)
 else
 module_name = ghoul
 endif
-ccflags-y := -D MODULE_NAME='"$(module_name)"'
 obj-m += $(module_name).o
 $(module_name)-objs := ./src/$(module_name).o ./src/load.o ./src/hooks.o ./src/service.o ./src/privileges.o ./src/hide.o
 KVERSION = $(shell uname -r)
 
 # Compiler definitions from .env file
+ccflags-y := -D MODULE_NAME='"$(module_name)"'
+ifeq ($(GHOUL_DEBUG), y)
+ccflags-y := $(ccflags-y) -D __DEBUG__
+endif
 ifeq ($(STEALTH_HIDE_MODULE_PROCFS), y)
 ccflags-y := $(ccflags-y) -D HIDE_MODULE_PROCFS
 endif

