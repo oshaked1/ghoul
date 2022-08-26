@@ -24,6 +24,9 @@ endif
 ifeq ($(STEALTH_HIDE_MODULE_SYSFS), y)
 ccflags-y := $(ccflags-y) -D HIDE_MODULE_SYSFS
 endif
+ifeq ($(STEALTH_HIDE_FTRACE), y)
+ccflags-y := $(ccflags-y) -D HIDE_FTRACE
+endif
 
 all:
 ifneq ($(module_name), ghoul)

