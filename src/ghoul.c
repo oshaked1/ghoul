@@ -1,7 +1,6 @@
 #include <linux/module.h>
 #include "ghoul.h"
 #include "load.h"
-#include "hooks.h"
 
 int hooks_installed = 0;
 

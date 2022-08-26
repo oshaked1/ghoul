@@ -9,7 +9,8 @@ else
 module_name = ghoul
 endif
 obj-m += $(module_name).o
-$(module_name)-objs := ./src/$(module_name).o ./src/load.o ./src/hooks.o ./src/service.o ./src/privileges.o ./src/hide.o
+$(module_name)-objs := ./src/$(module_name).o ./src/load.o ./src/hooks.o ./src/service.o ./src/privileges.o ./src/hide.o \
+	./src/ftrace_hook.o ./src/inline_hook.o
 KVERSION = $(shell uname -r)
 
 # Compiler definitions from .env file

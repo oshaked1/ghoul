@@ -5,36 +5,9 @@
  * */
 
 #include <linux/ftrace.h>
-#include <linux/linkage.h>
 #include <linux/slab.h>
-#include <linux/uaccess.h>
-#include <linux/version.h>
+#include "hook.h"
 #include "ghoul.h"
-
-#if defined(CONFIG_X86_64) && (LINUX_VERSION_CODE >= KERNEL_VERSION(4,17,0))
-#define PTREGS_SYSCALL_STUBS
-#endif
-
-/* x64 has to be special and require a different naming convention */
-#ifdef PTREGS_SYSCALL_STUBS
-#define SYSCALL_NAME(name) ("__x64_" name)
-#else
-#define SYSCALL_NAME(name) (name)
-#endif
-
-#define HOOK(_name, _hook, _orig)   \
-{                   \
-    .name = (_name),        \
-    .function = (_hook),        \
-    .original = (_orig),        \
-}
-
-#define SYSCALL_HOOK(_name, _hook, _orig)   \
-{                   \
-    .name = SYSCALL_NAME(_name),        \
-    .function = (_hook),        \
-    .original = (_orig),        \
-}
 
 /* We need to prevent recursive loops when hooking, otherwise the kernel will
  * panic and hang. The options are to either detect recursion by looking at
@@ -49,19 +22,6 @@
 #if !USE_FENTRY_OFFSET
 #pragma GCC optimize("-fno-optimize-sibling-calls")
 #endif
-
-/* We pack all the information we need (name, hooking function, original function)
- * into this struct. This makes is easier for setting up the hook and just passing
- * the entire struct off to fh_install_hook() later on.
- * */
-struct ftrace_hook {
-    const char *name;
-    void *function;
-    void *original;
-
-    unsigned long address;
-    struct ftrace_ops ops;
-};
 
 /* Ftrace needs to know the address of the original function that we
  * are going to hook. As before, we just use kallsyms_lookup_name() 
@@ -163,7 +123,7 @@ notrace void fh_remove_hook(struct ftrace_hook *hook)
 /* To make it easier to hook multiple functions in one module, this provides
  * a simple loop over an array of ftrace_hook struct
  * */
-notrace int fh_install_hooks(struct ftrace_hook *hooks, size_t count)
+notrace int ftrace_install_hooks(struct ftrace_hook *hooks, size_t count)
 {
     int err;
     size_t i;
@@ -184,7 +144,7 @@ error:
     return err;
 }
 
-notrace void fh_remove_hooks(struct ftrace_hook *hooks, size_t count)
+notrace void ftrace_remove_hooks(struct ftrace_hook *hooks, size_t count)
 {
     size_t i;
 
