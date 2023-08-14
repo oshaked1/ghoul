@@ -1,11 +1,8 @@
-/*
- * Helper library for ftrace hooking kernel functions
- * Author: Harvey Phillips (xcellerator@gmx.com)
- * License: GPL
- * */
-
+/**
+ * Code based on helper library for ftrace hooking kernel functions
+ * by Harvey Phillips (xcellerator@gmx.com)
+*/
 #include <linux/ftrace.h>
-#include <linux/slab.h>
 #include "hook.h"
 #include "ghoul.h"
 
@@ -29,18 +26,15 @@
  * */
 notrace static int fh_resolve_hook_address(struct ftrace_hook *hook)
 {
-    hook->address = kallsyms_lookup_name(hook->name);
+    hook->address = symbol_addr(hook->name);
 
-    if (!hook->address)
-    {
-        debug("ghoul: unresolved symbol: %s\n", hook->name);
+    if (hook->address == 0)
         return -ENOENT;
-    }
 
 #if USE_FENTRY_OFFSET
-    *((unsigned long*) hook->original) = hook->address + MCOUNT_INSN_SIZE;
+    *((unsigned long*) hook->call_original) = hook->address + MCOUNT_INSN_SIZE;
 #else
-    *((unsigned long*) hook->original) = hook->address;
+    *((unsigned long*) hook->call_original) = hook->address;
 #endif
 
     return 0;
@@ -55,7 +49,7 @@ notrace static void fh_ftrace_thunk(unsigned long ip, unsigned long parent_ip, s
     regs->ip = (unsigned long) hook->function;
 #else
     if(!within_module(parent_ip, THIS_MODULE))
-        regs->ip = (unsigned long) hook->function;
+        regs->ip = (unsigned long) hook->hook_function;
 #endif
 }
 
@@ -65,7 +59,7 @@ notrace static void fh_ftrace_thunk(unsigned long ip, unsigned long parent_ip, s
  * the built-in ftrace_set_filter_ip() and register_ftrace_function() functions
  * provided by ftrace.h
  * */
-notrace int fh_install_hook(struct ftrace_hook *hook)
+notrace int register_ftrace_hook(struct ftrace_hook *hook)
 {
     int err;
     err = fh_resolve_hook_address(hook);
@@ -102,9 +96,9 @@ notrace int fh_install_hook(struct ftrace_hook *hook)
 
 /* Disabling our function hook is just a simple matter of calling the built-in
  * unregister_ftrace_function() and ftrace_set_filter_ip() functions (note the
- * opposite order to that in fh_install_hook()).
+ * opposite order to that in register_ftrace_hook()).
  * */
-notrace void fh_remove_hook(struct ftrace_hook *hook)
+notrace void unregister_ftrace_hook(struct ftrace_hook *hook)
 {
     int err;
     err = unregister_ftrace_function(&hook->ops);
@@ -123,14 +117,14 @@ notrace void fh_remove_hook(struct ftrace_hook *hook)
 /* To make it easier to hook multiple functions in one module, this provides
  * a simple loop over an array of ftrace_hook struct
  * */
-notrace int ftrace_install_hooks(struct ftrace_hook *hooks, size_t count)
+notrace int register_ftrace_hooks(struct ftrace_hook *hooks, size_t count)
 {
     int err;
     size_t i;
 
     for (i = 0 ; i < count ; i++)
     {
-        err = fh_install_hook(&hooks[i]);
+        err = register_ftrace_hook(&hooks[i]);
         if(err)
             goto error;
     }
@@ -139,15 +133,15 @@ notrace int ftrace_install_hooks(struct ftrace_hook *hooks, size_t count)
 error:
     while (i != 0)
     {
-        fh_remove_hook(&hooks[--i]);
+        unregister_ftrace_hook(&hooks[--i]);
     }
     return err;
 }
 
-notrace void ftrace_remove_hooks(struct ftrace_hook *hooks, size_t count)
+notrace void unregister_ftrace_hooks(struct ftrace_hook *hooks, size_t count)
 {
     size_t i;
 
     for (i = 0 ; i < count ; i++)
-        fh_remove_hook(&hooks[i]);
+        unregister_ftrace_hook(&hooks[i]);
 }

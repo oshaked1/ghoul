@@ -4,14 +4,8 @@
  * Some private definitions from the Linux kernel (5.4.0).
  * These are temporary - I will find a way to include these automatically.
  */
-struct open_flags {
-	int open_flag;
-	umode_t mode;
-	int acc_mode;
-	int intent;
-	int lookup_flags;
-};
 
+// from fs/namei.c
 #define EMBEDDED_LEVELS 2
 struct nameidata {
 	struct path	path;
@@ -34,4 +28,23 @@ struct nameidata {
 	struct inode	*link_inode;
 	unsigned	root_seq;
 	int		dfd;
+};
+
+// from kernel/trace/ftrace.c
+struct ftrace_iterator {
+	loff_t				pos;
+	loff_t				func_pos;
+	loff_t				mod_pos;
+	struct ftrace_page		*pg;
+	struct dyn_ftrace		*func;
+	struct ftrace_func_probe	*probe;
+	struct ftrace_func_entry	*probe_entry;
+	struct trace_parser		parser;
+	struct ftrace_hash		*hash;
+	struct ftrace_ops		*ops;
+	struct trace_array		*tr;
+	struct list_head		*mod_list;
+	int				pidx;
+	int				idx;
+	unsigned			flags;
 };
